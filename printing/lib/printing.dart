@@ -22,3 +22,4 @@ export 'src/printing.dart';
 export 'src/printing_info.dart';
 export 'src/raster.dart';
 export 'src/widget_wrapper.dart';
+export 'src/page_size.dart';

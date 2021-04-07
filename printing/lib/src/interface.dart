@@ -20,6 +20,7 @@ import 'dart:typed_data';
 import 'package:flutter/rendering.dart' show Rect;
 import 'package:pdf/pdf.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:printing/src/page_size.dart';
 
 import 'callback.dart';
 import 'method_channel.dart';
@@ -63,6 +64,7 @@ abstract class PrintingPlatform extends PlatformInterface {
     LayoutCallback onLayout,
     String name,
     PdfPageFormat format,
+      String pageSize
   );
 
   /// Enumerate the available printers on the system.

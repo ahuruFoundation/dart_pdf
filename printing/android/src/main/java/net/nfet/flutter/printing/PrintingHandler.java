@@ -30,11 +30,12 @@ public class PrintingHandler implements MethodChannel.MethodCallHandler {
                     final String name = call.argument("name");
                     Double width = call.argument("width");
                     Double height = call.argument("height");
+                    String pageSize = call.argument("pageSize");
 
                     final PrintingJob printJob =
                             new PrintingJob(activity, this, (int) call.argument("job"));
                     assert name != null;
-                    printJob.printPdf(name, width, height);
+                    printJob.printPdf(name, width, height, pageSize);
 
                     result.success(1);
                     break;

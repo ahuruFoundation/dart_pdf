@@ -20,6 +20,7 @@ import 'dart:typed_data';
 import 'package:flutter/rendering.dart' show Rect;
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
+import 'package:printing/src/page_size.dart';
 
 import 'callback.dart';
 import 'interface.dart';
@@ -126,6 +127,7 @@ class MethodChannelPrinting extends PrintingPlatform {
     LayoutCallback onLayout,
     String name,
     PdfPageFormat format,
+      String pageSize
   ) async {
     final job = _newPrintJob(PrintJob(
       onCompleted: Completer<bool>(),
@@ -141,6 +143,7 @@ class MethodChannelPrinting extends PrintingPlatform {
       'marginTop': format.marginTop,
       'marginRight': format.marginRight,
       'marginBottom': format.marginBottom,
+      'pageSize': pageSize
     };
 
     await _channel.invokeMethod<int>('printPdf', params);

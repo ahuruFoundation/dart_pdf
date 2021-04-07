@@ -190,12 +190,22 @@ public class PrintingJob extends PrintDocumentAdapter {
         thread.start();
     }
 
-    void printPdf(@NonNull String name, @NonNull Double width, @NonNull Double height) {
+    void printPdf(@NonNull String name, @NonNull Double width, @NonNull Double height, String pageSize) {
         jobName = name;
 
         PrintAttributes.Builder attrBuilder = new PrintAttributes.Builder();
-        if (width > height) {
-            attrBuilder.setMediaSize(PrintAttributes.MediaSize.UNKNOWN_LANDSCAPE);
+        if (pageSize != null) {
+            if (pageSize.equals("A4")) {
+                if (width > height) {
+                    attrBuilder.setMediaSize(PrintAttributes.MediaSize.ISO_A4.asLandscape());
+                } else {
+                    attrBuilder.setMediaSize(PrintAttributes.MediaSize.ISO_A4);
+                }
+            }
+        } else {
+            if (width > height) {
+                attrBuilder.setMediaSize(PrintAttributes.MediaSize.UNKNOWN_LANDSCAPE);
+            }
         }
         PrintAttributes attrib = attrBuilder.build();
         printJob = printManager.print(name, this, attrib);

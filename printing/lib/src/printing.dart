@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show Rect, Offset;
 import 'package:meta/meta.dart';
 import 'package:pdf/pdf.dart';
+import 'package:printing/src/page_size.dart';
 
 import 'callback.dart';
 import 'interface.dart';
@@ -41,12 +42,13 @@ mixin Printing {
     @required LayoutCallback onLayout,
     String name = 'Document',
     PdfPageFormat format = PdfPageFormat.standard,
+    String pageSize
   }) {
     assert(onLayout != null);
     assert(name != null);
     assert(format != null);
 
-    return PrintingPlatform.instance.layoutPdf(onLayout, name, format);
+    return PrintingPlatform.instance.layoutPdf(onLayout, name, format, pageSize);
   }
 
   /// Enumerate the available printers on the system.

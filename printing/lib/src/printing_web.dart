@@ -27,6 +27,7 @@ import 'package:flutter/rendering.dart' show Rect;
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:image/image.dart' as im;
 import 'package:pdf/pdf.dart';
+import 'package:printing/src/page_size.dart';
 import 'package:printing/src/pdfjs.dart';
 import 'package:printing/src/printer.dart';
 import 'package:printing/src/raster.dart';
@@ -61,7 +62,7 @@ class PrintingPlugin extends PrintingPlatform {
   Future<bool> layoutPdf(
     LayoutCallback onLayout,
     String name,
-    PdfPageFormat format,
+    PdfPageFormat format, String pageSize
   ) async {
     final result = await onLayout(format);
 
