@@ -30,7 +30,7 @@ import 'raster.dart';
 
 /// The interface that implementations of printing must implement.
 abstract class PrintingPlatform extends PlatformInterface {
-  /// Constructs a UrlLauncherPlatform.
+  /// Constructs a PrintingPlatform.
   PrintingPlatform() : super(token: _token);
 
   static final Object _token = Object();
@@ -61,29 +61,19 @@ abstract class PrintingPlatform extends PlatformInterface {
   /// and false if it is canceled.
   /// throws an exception in case of error
   Future<bool> layoutPdf(
+    Printer? printer,
     LayoutCallback onLayout,
     String name,
     PdfPageFormat format,
-      String pageSize
+    bool dynamicLayout,
+    String pageSize
   );
 
   /// Enumerate the available printers on the system.
   Future<List<Printer>> listPrinters();
 
   /// Opens the native printer picker interface, and returns the URL of the selected printer.
-  Future<Printer> pickPrinter(Rect bounds);
-
-  /// Prints a Pdf document to a specific local printer with no UI
-  ///
-  /// returns a future with a `bool` set to true if the document is printed
-  /// and false if it is canceled.
-  /// throws an exception in case of error
-  Future<bool> directPrintPdf(
-    Printer printer,
-    LayoutCallback onLayout,
-    String name,
-    PdfPageFormat format,
-  );
+  Future<Printer?> pickPrinter(Rect bounds);
 
   /// Displays a platform popup to share the Pdf document to another application
   Future<bool> sharePdf(
@@ -95,14 +85,14 @@ abstract class PrintingPlatform extends PlatformInterface {
   /// Convert an html document to a pdf data
   Future<Uint8List> convertHtml(
     String html,
-    String baseUrl,
+    String? baseUrl,
     PdfPageFormat format,
   );
 
   /// Convert a Pdf document to bitmap images
   Stream<PdfRaster> raster(
     Uint8List document,
-    List<int> pages,
+    List<int>? pages,
     double dpi,
   );
 }

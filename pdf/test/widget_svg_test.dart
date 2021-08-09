@@ -20,7 +20,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 import 'package:test/test.dart';
 
-Document pdf;
+late Document pdf;
 
 void main() {
   setUpAll(() {
@@ -39,7 +39,6 @@ void main() {
   });
 
   test('SVG Widgets', () {
-    print('=' * 120);
     final dir = Directory('../ref/svg');
     if (!dir.existsSync()) {
       return;

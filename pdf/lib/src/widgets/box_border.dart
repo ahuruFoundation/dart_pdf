@@ -26,8 +26,7 @@ class BorderStyle {
     this.paint = true,
     this.pattern,
     this.phase = 0,
-  })  : assert(paint != null),
-        assert(phase != null);
+  });
 
   static const none = BorderStyle(paint: false);
   static const solid = BorderStyle();
@@ -39,7 +38,7 @@ class BorderStyle {
 
   /// Lengths of alternating dashes and gaps. The numbers shall be nonnegative
   /// and not all zero.
-  final List<num> pattern;
+  final List<num>? pattern;
 
   /// Specify the distance into the dash pattern at which to start the dash.
   final int phase;
@@ -49,7 +48,7 @@ class BorderStyle {
       context.canvas
         ..saveContext()
         ..setLineCap(PdfLineCap.butt)
-        ..setLineDashPattern(pattern, phase);
+        ..setLineDashPattern(pattern!, phase);
     }
   }
 
@@ -75,7 +74,7 @@ abstract class BoxBorder {
     Context context,
     PdfRect box, {
     BoxShape shape = BoxShape.rectangle,
-    BorderRadius borderRadius,
+    BorderRadius? borderRadius,
   });
 
   static void _paintUniformBorderWithCircle(
@@ -140,9 +139,9 @@ class BorderSide {
   final BorderStyle style;
 
   BorderSide copyWith({
-    PdfColor color,
-    double width,
-    BorderStyle style,
+    PdfColor? color,
+    double? width,
+    BorderStyle? style,
   }) =>
       BorderSide(
         color: color ?? this.color,
@@ -175,11 +174,7 @@ class Border extends BoxBorder {
     this.right = BorderSide.none,
     this.bottom = BorderSide.none,
     this.left = BorderSide.none,
-  })  : assert(top != null),
-        assert(right != null),
-        assert(bottom != null),
-        assert(left != null),
-        super();
+  }) : super();
 
   /// A uniform border with all sides the same color and width.
   factory Border.all({
@@ -193,8 +188,7 @@ class Border extends BoxBorder {
 
   /// Creates a border whose sides are all the same.
   const Border.fromBorderSide(BorderSide side)
-      : assert(side != null),
-        top = side,
+      : top = side,
         right = side,
         bottom = side,
         left = side,
@@ -204,9 +198,7 @@ class Border extends BoxBorder {
   const Border.symmetric({
     BorderSide vertical = BorderSide.none,
     BorderSide horizontal = BorderSide.none,
-  })  : assert(vertical != null),
-        assert(horizontal != null),
-        left = vertical,
+  })  : left = vertical,
         top = horizontal,
         right = vertical,
         bottom = horizontal,
@@ -232,13 +224,8 @@ class Border extends BoxBorder {
     Context context,
     PdfRect box, {
     BoxShape shape = BoxShape.rectangle,
-    BorderRadius borderRadius,
+    BorderRadius? borderRadius,
   }) {
-    assert(box.x != null);
-    assert(box.y != null);
-    assert(box.width != null);
-    assert(box.height != null);
-
     if (isUniform) {
       if (top.style == BorderStyle.none) {
         return;

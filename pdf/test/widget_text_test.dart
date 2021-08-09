@@ -23,10 +23,10 @@ import 'package:test/test.dart';
 
 import 'utils.dart';
 
-Document pdf;
-Font ttf;
-Font ttfBold;
-Font asian;
+late Document pdf;
+Font? ttf;
+Font? ttfBold;
+Font? asian;
 
 Iterable<TextDecoration> permute(
     List<TextDecoration> prefix, List<TextDecoration> remaining) sync* {

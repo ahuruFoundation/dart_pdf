@@ -22,7 +22,7 @@ import 'package:test/test.dart';
 
 import 'utils.dart';
 
-Document pdf;
+late Document pdf;
 
 void main() {
   setUpAll(() {

@@ -27,7 +27,10 @@ public class PrintJob: UIPrintPageRenderer, UIPrintInteractionControllerDelegate
     private var pdfDocument: CGPDFDocument?
     private var urlObservation: NSKeyValueObservation?
     private var jobName: String?
+    private var printerName: String?
     private var orientation: UIPrintInfo.Orientation?
+    private let semaphore = DispatchSemaphore(value: 0)
+    private var dynamic = false
 
     public init(printing: PrintingPlugin, index: Int) {
         self.printing = printing
@@ -48,7 +51,11 @@ public class PrintJob: UIPrintPageRenderer, UIPrintInteractionControllerDelegate
 
     func cancelJob(_ error: String?) {
         pdfDocument = nil
-        printing.onCompleted(printJob: self, completed: false, error: error as NSString?)
+        if dynamic {
+            semaphore.signal()
+        } else {
+            printing.onCompleted(printJob: self, completed: false, error: error as NSString?)
+        }
     }
 
     func setDocument(_ data: Data?) {
@@ -56,6 +63,12 @@ public class PrintJob: UIPrintPageRenderer, UIPrintInteractionControllerDelegate
         data?.copyBytes(to: bytesPointer, count: data?.count ?? 0)
         let dataProvider = CGDataProvider(dataInfo: nil, data: bytesPointer, size: data?.count ?? 0, releaseData: dataProviderReleaseDataCallback)
         pdfDocument = CGPDFDocument(dataProvider!)
+
+        if dynamic {
+            // Unblock the main thread
+            semaphore.signal()
+            return
+        }
 
         let controller = UIPrintInteractionController.shared
         controller.delegate = self
@@ -69,12 +82,41 @@ public class PrintJob: UIPrintPageRenderer, UIPrintInteractionControllerDelegate
         }
         controller.printInfo = printInfo
         controller.printPageRenderer = self
-        controller.present(animated: true, completionHandler: completionHandler)
+
+        DispatchQueue.main.async {
+            if self.printerName != nil {
+                let printerURL = URL(string: self.printerName!)
+
+                if printerURL == nil {
+                    self.printing.onCompleted(printJob: self, completed: false, error: "Unable to find printer URL")
+                    return
+                }
+
+                let printer = UIPrinter(url: printerURL!)
+                controller.print(to: printer, completionHandler: self.completionHandler)
+            } else {
+                controller.present(animated: true, completionHandler: self.completionHandler)
+            }
+        }
     }
 
     override public var numberOfPages: Int {
-        let pages = pdfDocument?.numberOfPages ?? 0
-        return pages
+        if dynamic {
+            printing.onLayout(
+                printJob: self,
+                width: paperRect.size.width,
+                height: paperRect.size.height,
+                marginLeft: printableRect.origin.x,
+                marginTop: printableRect.origin.y,
+                marginRight: paperRect.size.width - (printableRect.origin.x + printableRect.size.width),
+                marginBottom: paperRect.size.height - (printableRect.origin.y + printableRect.size.height)
+            )
+
+            // Block the main thread, waiting for a document
+            semaphore.wait()
+        }
+
+        return pdfDocument?.numberOfPages ?? 0
     }
 
     func completionHandler(printController _: UIPrintInteractionController, completed: Bool, error: Error?) {
@@ -85,32 +127,8 @@ public class PrintJob: UIPrintPageRenderer, UIPrintInteractionControllerDelegate
         printing.onCompleted(printJob: self, completed: completed, error: error?.localizedDescription as NSString?)
     }
 
-    func directPrintPdf(name: String, data: Data, withPrinter printerID: String) {
-        let printing = UIPrintInteractionController.isPrintingAvailable
-        if !printing {
-            self.printing.onCompleted(printJob: self, completed: false, error: "Printing not available")
-            return
-        }
-
-        let controller = UIPrintInteractionController.shared
-
-        let printInfo = UIPrintInfo.printInfo()
-        printInfo.jobName = name
-        printInfo.outputType = .general
-        controller.printInfo = printInfo
-        controller.printingItem = data
-        let printerURL = URL(string: printerID)
-
-        if printerURL == nil {
-            self.printing.onCompleted(printJob: self, completed: false, error: "Unable to find printer URL")
-            return
-        }
-
-        let printer = UIPrinter(url: printerURL!)
-        controller.print(to: printer, completionHandler: completionHandler)
-    }
-
-    func printPdf(name: String, withPageSize size: CGSize, andMargin margin: CGRect) {
+    func printPdf(name: String, withPageSize size: CGSize, andMargin margin: CGRect, withPrinter printerID: String?, dynamically dyn: Bool) {
+        dynamic = dyn
         let printing = UIPrintInteractionController.isPrintingAvailable
         if !printing {
             self.printing.onCompleted(printJob: self, completed: false, error: "Printing not available")
@@ -122,6 +140,40 @@ public class PrintJob: UIPrintPageRenderer, UIPrintInteractionControllerDelegate
         }
 
         jobName = name
+        printerName = printerID
+
+        let controller = UIPrintInteractionController.shared
+        controller.delegate = self
+
+        let printInfo = UIPrintInfo.printInfo()
+        printInfo.jobName = jobName!
+        printInfo.outputType = .general
+        if orientation != nil {
+            printInfo.orientation = orientation!
+            orientation = nil
+        }
+        controller.printInfo = printInfo
+        controller.showsPaperSelectionForLoadedPapers = true
+
+        controller.printPageRenderer = self
+
+        if printerID != nil {
+            let printerURL = URL(string: printerID!)
+
+            if printerURL == nil {
+                self.printing.onCompleted(printJob: self, completed: false, error: "Unable to find printer URL")
+                return
+            }
+
+            let printer = UIPrinter(url: printerURL!)
+            controller.print(to: printer, completionHandler: completionHandler)
+            return
+        }
+
+        if dynamic {
+            controller.present(animated: true, completionHandler: completionHandler)
+            return
+        }
 
         self.printing.onLayout(
             printJob: self,
@@ -250,9 +302,10 @@ public class PrintJob: UIPrintPageRenderer, UIPrintInteractionControllerDelegate
 
             for pageNum in pages ?? Array(0 ... pageCount - 1) {
                 guard let page = document.page(at: pageNum + 1) else { continue }
+                let angle = CGFloat(page.rotationAngle) * CGFloat.pi / -180
                 let rect = page.getBoxRect(.mediaBox)
-                let width = Int(rect.width * scale)
-                let height = Int(rect.height * scale)
+                let width = Int(abs((cos(angle) * rect.width + sin(angle) * rect.height) * scale))
+                let height = Int(abs((cos(angle) * rect.height + sin(angle) * rect.width) * scale))
                 let stride = width * 4
                 var data = Data(repeating: 0, count: stride * height)
 
@@ -268,7 +321,10 @@ public class PrintJob: UIPrintPageRenderer, UIPrintInteractionControllerDelegate
                         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
                     )
                     if context != nil {
+                        context!.translateBy(x: CGFloat(width) / 2, y: CGFloat(height) / 2)
                         context!.scaleBy(x: scale, y: scale)
+                        context!.rotate(by: angle)
+                        context!.translateBy(x: -rect.width / 2, y: -rect.height / 2)
                         context!.drawPDFPage(page)
                     }
                 }
@@ -287,7 +343,7 @@ public class PrintJob: UIPrintPageRenderer, UIPrintInteractionControllerDelegate
     public static func printingInfo() -> NSDictionary {
         let data: NSDictionary = [
             "directPrint": true,
-            "dynamicLayout": false,
+            "dynamicLayout": true,
             "canPrint": true,
             "canConvertHtml": true,
             "canShare": true,

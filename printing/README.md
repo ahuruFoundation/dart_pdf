@@ -36,6 +36,16 @@ for documentation.
    ```
 4. For MacOS add printing capability by opening macos directory in XCode
 
+5. For the web, a javascript library and a small script has to be added to
+   your `web/index.html` file, just before
+   `<script src="main.dart.js" type="application/javascript"></script>`:
+
+   ```html
+   <script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.7.570/pdf.min.js"></script>
+   <script type="text/javascript">
+       pdfjsLib.GlobalWorkerOptions.workerSrc = "//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.7.570/pdf.worker.min.js";
+   </script>
+   ```
 
 ## Examples
 
@@ -46,16 +56,15 @@ doc.addPage(pw.Page(
       pageFormat: PdfPageFormat.a4,
       build: (pw.Context context) {
         return pw.Center(
-          child: pw.Text("Hello World"),
+          child: pw.Text('Hello World'),
         ); // Center
       })); // Page
 ```
 
-To load an image from an ImageProvider:
+To load an image from a Flutter asset:
 
 ```dart
-const imageProvider = const AssetImage('assets/image.png');
-final image = await flutterImageProvider(imageProvider);
+final image = await imageFromAssetBundle('assets/image.png');
 
 doc.addPage(pw.Page(
     build: (pw.Context context) {
@@ -68,8 +77,7 @@ doc.addPage(pw.Page(
 To use a TrueType font from a flutter bundle:
 
 ```dart
-final font = await rootBundle.load("assets/open-sans.ttf");
-final ttf = pw.Font.ttf(font);
+final ttf = await fontFromAssetBundle('assets/open-sans.ttf');
 
 doc.addPage(pw.Page(
     build: (pw.Context context) {
@@ -83,7 +91,7 @@ To save the pdf file using the [path_provider](https://pub.dev/packages/path_pro
 
 ```dart
 final output = await getTemporaryDirectory();
-final file = File("${output.path}/example.pdf");
+final file = File('${output.path}/example.pdf');
 await file.writeAsBytes(await doc.save());
 ```
 
@@ -136,17 +144,7 @@ PdfPreview(
 );
 ```
 
-This widget is compatible with Android, iOS, macOS and web.
-
-For the web, a javascript library and a small script has to be added to
-your `web/index.html` file:
-
-```html
-<script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.4.456/pdf.min.js"></script>
-<script type="text/javascript">
-     pdfjsLib.GlobalWorkerOptions.workerSrc = "//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.4.456/pdf.worker.min.js";
-</script>
-```
+This widget is compatible with Android, iOS, macOS, Linau, Windows and web.
 
 ## Designing your PDF document
 

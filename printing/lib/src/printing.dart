@@ -19,7 +19,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show Rect, Offset;
-import 'package:meta/meta.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/src/page_size.dart';
 
@@ -39,16 +38,20 @@ mixin Printing {
   /// and false if it is canceled.
   /// throws an exception in case of error
   static Future<bool> layoutPdf({
-    @required LayoutCallback onLayout,
+    required LayoutCallback onLayout,
     String name = 'Document',
     PdfPageFormat format = PdfPageFormat.standard,
-    String pageSize
+    bool dynamicLayout = true,
+    String pageSize = PageSize.A4
   }) {
-    assert(onLayout != null);
-    assert(name != null);
-    assert(format != null);
-
-    return PrintingPlatform.instance.layoutPdf(onLayout, name, format, pageSize);
+    return PrintingPlatform.instance.layoutPdf(
+      null,
+      onLayout,
+      name,
+      format,
+      dynamicLayout,
+      pageSize
+    );
   }
 
   /// Enumerate the available printers on the system.
@@ -64,18 +67,14 @@ mixin Printing {
   ///
   /// This is not supported on all platforms. Check the result of [info] to
   /// find at runtime if this feature is available or not.
-  static Future<Printer> pickPrinter({
-    @required BuildContext context,
-    Rect bounds,
-    String title,
+  static Future<Printer?> pickPrinter({
+    required BuildContext context,
+    Rect? bounds,
+    String? title,
   }) async {
     final _info = await info();
 
-    if (_info != null && _info.canListPrinters) {
-      assert(
-        context != null,
-        'Pass a BuildContext to pickPrinter to display a selection list',
-      );
+    if (_info.canListPrinters) {
       final printers = await listPrinters();
       printers.sort((a, b) {
         if (a.isDefault) {
@@ -95,6 +94,7 @@ mixin Printing {
             for (final printer in printers)
               if (printer.isAvailable)
                 SimpleDialogOption(
+                  onPressed: () => Navigator.of(context).pop(printer),
                   child: Text(
                     printer.name,
                     style: TextStyle(
@@ -103,7 +103,6 @@ mixin Printing {
                           : FontStyle.normal,
                     ),
                   ),
-                  onPressed: () => Navigator.of(context).pop(printer),
                 ),
           ],
         ),
@@ -124,36 +123,28 @@ mixin Printing {
   /// This is not supported on all platforms. Check the result of [info] to
   /// find at runtime if this feature is available or not.
   static FutureOr<bool> directPrintPdf({
-    @required Printer printer,
-    @required LayoutCallback onLayout,
+    required Printer printer,
+    required LayoutCallback onLayout,
     String name = 'Document',
     PdfPageFormat format = PdfPageFormat.standard,
+    bool dynamicLayout = true,
   }) {
-    if (printer == null) {
-      return false;
-    }
-
-    assert(onLayout != null);
-    assert(name != null);
-    assert(format != null);
-
-    return PrintingPlatform.instance.directPrintPdf(
+    return PrintingPlatform.instance.layoutPdf(
       printer,
       onLayout,
       name,
       format,
+      dynamicLayout,
+      PageSize.A4
     );
   }
 
   /// Displays a platform popup to share the Pdf document to another application
   static Future<bool> sharePdf({
-    @required Uint8List bytes,
+    required Uint8List bytes,
     String filename = 'document.pdf',
-    Rect bounds,
+    Rect? bounds,
   }) {
-    assert(bytes != null);
-    assert(filename != null);
-
     bounds ??= Rect.fromCircle(center: Offset.zero, radius: 10);
 
     return PrintingPlatform.instance.sharePdf(
@@ -168,13 +159,10 @@ mixin Printing {
   /// This is not supported on all platforms. Check the result of [info] to
   /// find at runtime if this feature is available or not.
   static Future<Uint8List> convertHtml({
-    @required String html,
-    String baseUrl,
+    required String html,
+    String? baseUrl,
     PdfPageFormat format = PdfPageFormat.standard,
   }) {
-    assert(html != null);
-    assert(format != null);
-
     return PrintingPlatform.instance.convertHtml(
       html,
       baseUrl,
@@ -199,11 +187,9 @@ mixin Printing {
   /// find at runtime if this feature is available or not.
   static Stream<PdfRaster> raster(
     Uint8List document, {
-    List<int> pages,
+    List<int>? pages,
     double dpi = PdfPageFormat.inch,
   }) {
-    assert(document != null);
-    assert(dpi != null);
     assert(dpi > 0);
 
     return PrintingPlatform.instance.raster(document, pages, dpi);

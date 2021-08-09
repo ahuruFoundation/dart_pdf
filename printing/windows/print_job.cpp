@@ -71,119 +71,77 @@ std::wstring fromUtf8(std::string str) {
 }
 
 PrintJob::PrintJob(Printing* printing, int index)
-    : printing(printing), index(index) {}
+    : printing{printing}, index{index} {}
 
-bool PrintJob::directPrintPdf(std::string name,
-                              std::vector<uint8_t> data,
-                              std::string withPrinter) {
-  FPDF_InitLibraryWithConfig(nullptr);
+bool PrintJob::printPdf(std::string name, std::string printer) {
+  documentName = name;
 
-  auto doc = FPDF_LoadMemDocument64(data.data(), data.size(), nullptr);
-  if (!doc) {
-    FPDF_DestroyLibrary();
-    return false;
-  }
+  if (printer.empty()) {
+    PRINTDLG pd;
+    DEVMODE* dm = static_cast<DEVMODE*>(GlobalAlloc(0, sizeof(DEVMODE)));
+    ZeroMemory(dm, sizeof(DEVMODE));
+    dm->dmFields = DM_ORIENTATION;
+    dm->dmOrientation = 2;
 
-  hDC = CreateDC(TEXT("WINSPOOL"), fromUtf8(withPrinter).c_str(), NULL, NULL);
-  if (!hDC) {
-    FPDF_CloseDocument(doc);
-    FPDF_DestroyLibrary();
-    return false;
-  }
+    // Initialize PRINTDLG
+    ZeroMemory(&pd, sizeof(pd));
+    pd.lStructSize = sizeof(pd);
 
-  DOCINFO docInfo;
-  ZeroMemory(&docInfo, sizeof(docInfo));
-  docInfo.cbSize = sizeof(DOCINFO);
-  auto docName = fromUtf8(name);
-  docInfo.lpszDocName = docName.c_str();
-  StartDoc(hDC, &docInfo);
+    // Initialize PRINTDLG
+    pd.hwndOwner = nullptr;
+    pd.hDevMode = dm;
+    pd.hDevNames = nullptr;  // Don't forget to free or store hDevNames.
+    pd.hDC = nullptr;
+    pd.Flags = PD_USEDEVMODECOPIES | PD_RETURNDC | PD_PRINTSETUP |
+               PD_NOSELECTION | PD_NOPAGENUMS;
+    pd.nCopies = 1;
+    pd.nFromPage = 0xFFFF;
+    pd.nToPage = 0xFFFF;
+    pd.nMinPage = 1;
+    pd.nMaxPage = 0xFFFF;
 
-  int pageCount = FPDF_GetPageCount(doc);
+    auto r = PrintDlg(&pd);
 
-  for (auto i = 0; i < pageCount; i++) {
-    StartPage(hDC);
-    auto page = FPDF_LoadPage(doc, i);
-    if (!page) {
-      EndDoc(hDC);
+    if (r != 1) {
+      printing->onCompleted(this, false, "");
       DeleteDC(hDC);
-      FPDF_CloseDocument(doc);
-      FPDF_DestroyLibrary();
-      return false;
+      GlobalFree(hDevNames);
+      ClosePrinter(hDevMode);
+      return true;
     }
-    auto pageWidth = FPDF_GetPageWidth(page);
-    auto pageHeight = FPDF_GetPageHeight(page);
-    auto dpiX = GetDeviceCaps(hDC, LOGPIXELSX);
-    auto dpiY = GetDeviceCaps(hDC, LOGPIXELSY);
-    auto width = static_cast<int>(pageWidth / pdfDpi * dpiX);
-    auto height = static_cast<int>(pageHeight / pdfDpi * dpiY);
-    FPDF_RenderPage(hDC, page, 0, 0, width, height, 0, FPDF_ANNOT);
-    FPDF_ClosePage(page);
-    EndPage(hDC);
-  }
-
-  EndDoc(hDC);
-  DeleteDC(hDC);
-  FPDF_CloseDocument(doc);
-  FPDF_DestroyLibrary();
-  return true;
-}
-
-bool PrintJob::printPdf(std::string name) {
-  PRINTDLG pd;
-  DEVMODE* dm = static_cast<DEVMODE*>(GlobalAlloc(0, sizeof(DEVMODE)));
-  ZeroMemory(dm, sizeof(DEVMODE));
-  dm->dmFields = DM_ORIENTATION;
-  dm->dmOrientation = 2;
-  printf("Printing ... \n");
-
-  // Initialize PRINTDLG
-  ZeroMemory(&pd, sizeof(pd));
-  pd.lStructSize = sizeof(pd);
-
-  // Initialize PRINTDLG
-  pd.hwndOwner = nullptr;
-  pd.hDevMode = dm;
-  pd.hDevNames = nullptr;  // Don't forget to free or store hDevNames.
-  pd.hDC = nullptr;
-  pd.Flags = PD_USEDEVMODECOPIES | PD_RETURNDC | PD_PRINTSETUP |
-             PD_NOSELECTION | PD_NOPAGENUMS;
-  pd.nCopies = 1;
-  pd.nFromPage = 0xFFFF;
-  pd.nToPage = 0xFFFF;
-  pd.nMinPage = 1;
-  pd.nMaxPage = 0xFFFF;
-
-  auto r = PrintDlg(&pd);
-
-  if (r == 1) {
-    auto dpiX = static_cast<double>(GetDeviceCaps(pd.hDC, LOGPIXELSX)) / pdfDpi;
-    auto dpiY = static_cast<double>(GetDeviceCaps(pd.hDC, LOGPIXELSY)) / pdfDpi;
-    auto pageWidth =
-        static_cast<double>(GetDeviceCaps(pd.hDC, PHYSICALWIDTH)) / dpiX;
-    auto pageHeight =
-        static_cast<double>(GetDeviceCaps(pd.hDC, PHYSICALHEIGHT)) / dpiY;
-    auto printableWidth =
-        static_cast<double>(GetDeviceCaps(pd.hDC, HORZRES)) / dpiX;
-    auto printableHeight =
-        static_cast<double>(GetDeviceCaps(pd.hDC, VERTRES)) / dpiY;
-    auto marginLeft =
-        static_cast<double>(GetDeviceCaps(pd.hDC, PHYSICALOFFSETX)) / dpiX;
-    auto marginTop =
-        static_cast<double>(GetDeviceCaps(pd.hDC, PHYSICALOFFSETY)) / dpiY;
-    auto marginRight = pageWidth - printableWidth - marginLeft;
-    auto marginBottom = pageHeight - printableHeight - marginTop;
 
     hDC = pd.hDC;
     hDevMode = pd.hDevMode;
     hDevNames = pd.hDevNames;
-    documentName = name;
 
-    printing->onLayout(this, pageWidth, pageHeight, marginLeft, marginTop,
-                       marginRight, marginBottom);
-    return true;
+  } else {
+    hDC = CreateDC(TEXT("WINSPOOL"), fromUtf8(printer).c_str(), NULL, NULL);
+    if (!hDC) {
+      return false;
+    }
+    hDevMode = nullptr;
+    hDevNames = nullptr;
   }
 
-  return false;
+  auto dpiX = static_cast<double>(GetDeviceCaps(hDC, LOGPIXELSX)) / pdfDpi;
+  auto dpiY = static_cast<double>(GetDeviceCaps(hDC, LOGPIXELSY)) / pdfDpi;
+  auto pageWidth =
+      static_cast<double>(GetDeviceCaps(hDC, PHYSICALWIDTH)) / dpiX;
+  auto pageHeight =
+      static_cast<double>(GetDeviceCaps(hDC, PHYSICALHEIGHT)) / dpiY;
+  auto printableWidth = static_cast<double>(GetDeviceCaps(hDC, HORZRES)) / dpiX;
+  auto printableHeight =
+      static_cast<double>(GetDeviceCaps(hDC, VERTRES)) / dpiY;
+  auto marginLeft =
+      static_cast<double>(GetDeviceCaps(hDC, PHYSICALOFFSETX)) / dpiX;
+  auto marginTop =
+      static_cast<double>(GetDeviceCaps(hDC, PHYSICALOFFSETY)) / dpiY;
+  auto marginRight = pageWidth - printableWidth - marginLeft;
+  auto marginBottom = pageHeight - printableHeight - marginTop;
+
+  printing->onLayout(this, pageWidth, pageHeight, marginLeft, marginTop,
+                     marginRight, marginBottom);
+  return true;
 }
 
 std::vector<Printer> PrintJob::listPrinters() {
@@ -284,6 +242,8 @@ void PrintJob::writeJob(std::vector<uint8_t> data) {
   DeleteDC(hDC);
   GlobalFree(hDevNames);
   ClosePrinter(hDevMode);
+
+  printing->onCompleted(this, true, "");
 }
 
 void PrintJob::cancelJob(std::string error) {}

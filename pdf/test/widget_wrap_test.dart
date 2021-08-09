@@ -21,7 +21,7 @@ import 'package:test/test.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 
-Document pdf;
+late Document pdf;
 
 void main() {
   setUpAll(() {

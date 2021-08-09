@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-import 'package:flutter_driver/driver_extension.dart';
-import 'package:printing_demo/main.dart' as app;
+#import <printing/printing-Swift.h>
 
-void main() {
-  // Enables flutter_driver extension
-  enableFlutterDriverExtension();
+// Dart:ffi API
 
-  // Call the `main()` function of the app
-  app.main();
+void net_nfet_printing_set_document(uint32_t job,
+                                    const uint8_t* doc,
+                                    uint64_t size) {
+  [PrintingPlugin setDocumentWithJob:job doc:doc size:size];
+}
+
+void net_nfet_printing_set_error(uint32_t job, const char* message) {
+  [PrintingPlugin setErrorWithJob:job message:message];
 }

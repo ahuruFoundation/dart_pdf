@@ -14,30 +14,30 @@
  * limitations under the License.
  */
 
-import 'package:meta/meta.dart';
 import 'package:pdf/pdf.dart';
 import 'package:vector_math/vector_math_64.dart';
 
+import 'basic.dart';
 import 'border_radius.dart';
 import 'box_border.dart';
 import 'container.dart';
 import 'decoration.dart';
 import 'geometry.dart';
+import 'text.dart';
 import 'text_style.dart';
 import 'theme.dart';
 import 'widget.dart';
 
 class Checkbox extends SingleChildWidget {
   Checkbox({
-    @required this.value,
-    this.defaultValue,
+    required this.value,
     this.tristate = false,
     this.activeColor = PdfColors.blue,
     this.checkColor = PdfColors.white,
-    @required this.name,
+    required this.name,
     double width = 13,
     double height = 13,
-    BoxDecoration decoration,
+    BoxDecoration? decoration,
   }) : super(
             child: Container(
                 width: width,
@@ -51,8 +51,6 @@ class Checkbox extends SingleChildWidget {
                     ))));
 
   final bool value;
-
-  final bool defaultValue;
 
   final bool tristate;
 
@@ -68,15 +66,15 @@ class Checkbox extends SingleChildWidget {
     paintChild(context);
 
     final bf = PdfButtonField(
-      rect: context.localToGlobal(box),
+      rect: context.localToGlobal(box!),
       fieldName: name,
-      value: value,
-      defaultValue: value,
+      value: value ? '/Yes' : null,
+      defaultValue: value ? '/Yes' : null,
       flags: <PdfAnnotFlags>{PdfAnnotFlags.print},
     );
 
-    final g =
-        bf.appearance(context.document, PdfAnnotApparence.normal, name: '/Yes');
+    final g = bf.appearance(context.document, PdfAnnotAppearance.normal,
+        name: '/Yes', selected: value);
     g.drawRect(0, 0, bf.rect.width, bf.rect.height);
     g.setFillColor(activeColor);
     g.fillPath();
@@ -87,7 +85,8 @@ class Checkbox extends SingleChildWidget {
     g.setLineWidth(2);
     g.strokePath();
 
-    bf.appearance(context.document, PdfAnnotApparence.normal, name: '/Off');
+    bf.appearance(context.document, PdfAnnotAppearance.normal,
+        name: '/Off', selected: !value);
 
     PdfAnnot(context.page, bf);
   }
@@ -99,11 +98,12 @@ class FlatButton extends SingleChildWidget {
     PdfColor color = PdfColors.blue,
     PdfColor colorDown = PdfColors.red,
     PdfColor colorRollover = PdfColors.blueAccent,
-    EdgeInsets padding,
-    BoxDecoration decoration,
-    Widget child,
-    @required this.name,
-  })  : _childDown = Container(
+    EdgeInsets? padding,
+    BoxDecoration? decoration,
+    this.flags,
+    required Widget child,
+    required this.name,
+  })   : _childDown = Container(
           child: DefaultTextStyle(
             style: TextStyle(color: textColor),
             child: child,
@@ -145,26 +145,22 @@ class FlatButton extends SingleChildWidget {
           ),
         );
 
-  // final PdfColor textColor;
-
-  // final PdfColor color;
-
-  // final EdgeInsets padding;
-
   final String name;
 
   final Widget _childDown;
 
   final Widget _childRollover;
 
+  final Set<PdfAnnotFlags>? flags;
+
   @override
   void paint(Context context) {
     super.paint(context);
 
     final bf = PdfButtonField(
-      rect: context.localToGlobal(box),
+      rect: context.localToGlobal(box!),
       fieldName: name,
-      flags: <PdfAnnotFlags>{PdfAnnotFlags.print},
+      flags: flags,
       fieldFlags: <PdfFieldFlags>{PdfFieldFlags.pushButton},
     );
 
@@ -175,29 +171,139 @@ class FlatButton extends SingleChildWidget {
     mat
       ..decompose(translation, rotation, scale)
       ..leftTranslate(-translation.x, -translation.y)
-      ..translate(box.x, box.y);
+      ..translate(box!.x, box!.y);
 
-    final cn = context.copyWith(
-        canvas: bf.appearance(context.document, PdfAnnotApparence.normal,
-            matrix: mat, boundingBox: box));
-    child.layout(
-        cn, BoxConstraints.tightFor(width: box.width, height: box.height));
-    child.paint(cn);
+    var canvas = bf.appearance(context.document, PdfAnnotAppearance.normal,
+        matrix: mat, boundingBox: box);
+    Widget.draw(
+      child!,
+      offset: PdfPoint.zero,
+      canvas: canvas,
+      page: context.page,
+      constraints:
+          BoxConstraints.tightFor(width: box!.width, height: box!.height),
+    );
 
-    final cd = context.copyWith(
-        canvas: bf.appearance(context.document, PdfAnnotApparence.down,
-            matrix: mat, boundingBox: box));
-    _childDown.layout(
-        cd, BoxConstraints.tightFor(width: box.width, height: box.height));
-    _childDown.paint(cd);
+    canvas = bf.appearance(context.document, PdfAnnotAppearance.down,
+        matrix: mat, boundingBox: box);
+    Widget.draw(
+      _childDown,
+      offset: PdfPoint.zero,
+      canvas: canvas,
+      page: context.page,
+      constraints:
+          BoxConstraints.tightFor(width: box!.width, height: box!.height),
+    );
 
-    final cr = context.copyWith(
-        canvas: bf.appearance(context.document, PdfAnnotApparence.rollover,
-            matrix: mat, boundingBox: box));
-    _childRollover.layout(
-        cr, BoxConstraints.tightFor(width: box.width, height: box.height));
-    _childRollover.paint(cr);
+    canvas = bf.appearance(context.document, PdfAnnotAppearance.rollover,
+        matrix: mat, boundingBox: box);
+    Widget.draw(
+      _childRollover,
+      offset: PdfPoint.zero,
+      canvas: canvas,
+      page: context.page,
+      constraints:
+          BoxConstraints.tightFor(width: box!.width, height: box!.height),
+    );
 
     PdfAnnot(context.page, bf);
+  }
+}
+
+class TextField extends StatelessWidget {
+  TextField({
+    this.child,
+    this.width = 120,
+    this.height = 13,
+    required this.name,
+    this.border,
+    this.flags,
+    this.date,
+    this.color,
+    this.backgroundColor,
+    this.highlighting,
+    this.maxLength,
+    this.alternateName,
+    this.mappingName,
+    this.fieldFlags,
+    this.value,
+    this.defaultValue,
+    this.textStyle,
+  });
+
+  final Widget? child;
+  final double width;
+  final double height;
+  final String name;
+  final PdfBorder? border;
+  final Set<PdfAnnotFlags>? flags;
+  final DateTime? date;
+  final PdfColor? color;
+  final PdfColor? backgroundColor;
+  final PdfAnnotHighlighting? highlighting;
+  final int? maxLength;
+  final String? alternateName;
+  final String? mappingName;
+  final Set<PdfFieldFlags>? fieldFlags;
+  final String? value;
+  final String? defaultValue;
+  final TextStyle? textStyle;
+
+  @override
+  Widget build(Context context) {
+    return child ?? SizedBox(width: width, height: height);
+  }
+
+  @override
+  void paint(Context context) {
+    super.paint(context);
+
+    final _textStyle = Theme.of(context).defaultTextStyle.merge(textStyle);
+
+    final tf = PdfTextField(
+      rect: context.localToGlobal(box!),
+      fieldName: name,
+      border: border,
+      flags: flags ?? const {PdfAnnotFlags.print},
+      date: date,
+      color: color,
+      backgroundColor: backgroundColor,
+      highlighting: highlighting,
+      maxLength: maxLength,
+      alternateName: alternateName,
+      mappingName: mappingName,
+      fieldFlags: fieldFlags,
+      value: value,
+      defaultValue: defaultValue,
+      font: _textStyle.font!.getFont(context)!,
+      fontSize: _textStyle.fontSize!,
+      textColor: _textStyle.color!,
+    );
+
+    final mat = context.canvas.getTransform();
+    final translation = Vector3(0, 0, 0);
+    final rotation = Quaternion(0, 0, 0, 0);
+    final scale = Vector3(0, 0, 0);
+    mat
+      ..decompose(translation, rotation, scale)
+      ..leftTranslate(-translation.x, -translation.y)
+      ..translate(box!.x, box!.y);
+
+    if (value != null) {
+      final canvas = tf.appearance(context.document, PdfAnnotAppearance.normal,
+          matrix: mat, boundingBox: box);
+      canvas.buf.putString('/Tx BMC\n');
+      Widget.draw(
+        Text(value!, style: _textStyle),
+        offset: PdfPoint.zero,
+        canvas: canvas,
+        page: context.page,
+        constraints:
+            BoxConstraints.tightFor(width: box!.width, height: box!.height),
+      );
+      canvas.buf.putString('EMC\n');
+    }
+
+    PdfAnnot(context.page, tf);
   }
 }

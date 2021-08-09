@@ -16,7 +16,6 @@
 
 import 'dart:math' as math;
 
-import 'package:meta/meta.dart';
 import 'package:pdf/pdf.dart';
 
 import '../flex.dart';
@@ -27,21 +26,19 @@ import 'grid_axis.dart';
 
 class CartesianGrid extends ChartGrid {
   CartesianGrid({
-    @required GridAxis xAxis,
-    @required GridAxis yAxis,
-  })  : _xAxis = xAxis..direction = Axis.horizontal,
+    required GridAxis xAxis,
+    required GridAxis yAxis,
+  })   : _xAxis = xAxis..direction = Axis.horizontal,
         _yAxis = yAxis..direction = Axis.vertical;
 
   final GridAxis _xAxis;
   final GridAxis _yAxis;
 
-  PdfRect gridBox;
+  late PdfRect gridBox;
 
   @override
   void layout(Context context, BoxConstraints constraints,
       {bool parentUsesSize = false}) {
-    assert(Chart.of(context) != null,
-        '$runtimeType cannot be used without a Chart widget');
     super.layout(context, constraints, parentUsesSize: parentUsesSize);
 
     final datasets = Chart.of(context).datasets;
@@ -73,7 +70,7 @@ class CartesianGrid extends ChartGrid {
     for (final dataset in datasets) {
       dataset.layout(context, BoxConstraints.tight(gridBox.size));
       dataset.box =
-          PdfRect.fromPoints(PdfPoint(width, height), dataset.box.size);
+          PdfRect.fromPoints(PdfPoint(width, height), dataset.box!.size);
     }
   }
 
@@ -107,13 +104,13 @@ class CartesianGrid extends ChartGrid {
 
     final datasets = Chart.of(context).datasets;
 
-    clip(context, box.size);
+    clip(context, box!.size);
     for (var dataSet in datasets) {
       dataSet.paintBackground(context);
     }
     context.canvas.restoreContext();
     paintBackground(context);
-    clip(context, box.size);
+    clip(context, box!.size);
     for (var dataSet in datasets) {
       dataSet.paint(context);
     }

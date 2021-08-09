@@ -15,6 +15,7 @@
  */
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'callback.dart';
@@ -23,25 +24,69 @@ import 'raster.dart';
 /// Represents a print job to communicate with the platform implementation
 class PrintJob {
   /// Create a print job
-  PrintJob({
+  const PrintJob._({
+    required this.index,
     this.onLayout,
     this.onHtmlRendered,
     this.onCompleted,
     this.onPageRasterized,
+    required this.useFFI,
   });
 
   /// Callback used when calling Printing.layoutPdf()
-  final LayoutCallback onLayout;
+  final LayoutCallback? onLayout;
 
   /// Callback used when calling Printing.convertHtml()
-  final Completer<Uint8List> onHtmlRendered;
+  final Completer<Uint8List>? onHtmlRendered;
 
   /// Future triggered when the job is done
-  final Completer<bool> onCompleted;
+  final Completer<bool>? onCompleted;
 
   /// Stream of rasterized pages
-  final StreamController<PdfRaster> onPageRasterized;
+  final StreamController<PdfRaster>? onPageRasterized;
 
   /// The Job number
-  int index;
+  final int index;
+
+  /// Use the FFI side-channel to send the PDF data
+  final bool useFFI;
+}
+
+/// Represents a list of print jobs
+class PrintJobs {
+  /// Create a list print jobs
+  PrintJobs();
+
+  static var _currentIndex = 0;
+
+  final _printJobs = <int, PrintJob>{};
+
+  /// Add a print job to the list
+  PrintJob add({
+    LayoutCallback? onLayout,
+    Completer<Uint8List>? onHtmlRendered,
+    Completer<bool>? onCompleted,
+    StreamController<PdfRaster>? onPageRasterized,
+  }) {
+    final job = PrintJob._(
+      index: _currentIndex++,
+      onLayout: onLayout,
+      onHtmlRendered: onHtmlRendered,
+      onCompleted: onCompleted,
+      onPageRasterized: onPageRasterized,
+      useFFI: Platform.isMacOS || Platform.isIOS,
+    );
+    _printJobs[job.index] = job;
+    return job;
+  }
+
+  /// Retrive an existing job
+  PrintJob? getJob(int index) {
+    return _printJobs[index];
+  }
+
+  /// remove a print job from the list
+  void remove(int index) {
+    _printJobs.remove(index);
+  }
 }

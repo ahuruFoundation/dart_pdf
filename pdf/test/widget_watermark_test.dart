@@ -20,8 +20,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 import 'package:test/test.dart';
 
-Document pdf;
-PageTheme pageTheme;
+late Document pdf;
+PageTheme? pageTheme;
 
 void main() {
   setUpAll(() {

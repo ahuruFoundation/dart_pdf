@@ -14,27 +14,16 @@
  * limitations under the License.
  */
 
-import 'package:flutter_driver/flutter_driver.dart';
-import 'package:test/test.dart';
+import 'dart:typed_data';
 
-void main() {
-  group('wrapWidget integration tests', () {
-    FlutterDriver driver;
+import 'print_job.dart';
 
-    final screenshotFinder = find.byValueKey('screenshot');
+/// Set the Pdf document data
+void setDocumentFfi(PrintJob job, Uint8List data) {
+  throw UnimplementedError('Not using FFI');
+}
 
-    setUpAll(() async {
-      driver = await FlutterDriver.connect();
-    });
-
-    tearDownAll(() {
-      if (driver != null) {
-        driver.close();
-      }
-    });
-
-    test('renders Widget as Image', () async {
-      await driver.tap(screenshotFinder);
-    });
-  });
+/// Set the Pdf Error message
+void setErrorFfi(PrintJob job, String message) {
+  throw UnimplementedError('Not using FFI');
 }

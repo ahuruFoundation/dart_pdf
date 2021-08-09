@@ -20,19 +20,19 @@ import 'package:test/test.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 
-Document pdf;
+late Document pdf;
 
 class Label extends StatelessWidget {
   Label({this.label, this.width});
 
-  final String label;
+  final String? label;
 
-  final double width;
+  final double? width;
 
   @override
-  Widget build(Context context) {
+  Widget build(Context? context) {
     return Container(
-      child: Text(label),
+      child: Text(label!),
       width: width,
       alignment: Alignment.centerRight,
       margin: const EdgeInsets.only(right: 5),
@@ -43,12 +43,12 @@ class Label extends StatelessWidget {
 class Decorated extends StatelessWidget {
   Decorated({this.child, this.color});
 
-  final Widget child;
+  final Widget? child;
 
-  final PdfColor color;
+  final PdfColor? color;
 
   @override
-  Widget build(Context context) {
+  Widget build(Context? context) {
     return Container(
       child: child,
       padding: const EdgeInsets.all(2),
@@ -81,13 +81,15 @@ void main() {
               Decorated(
                   child: TextField(
                 name: 'Given Name',
+                value: 'David',
                 textStyle: const TextStyle(color: PdfColors.amber),
               )),
               //
               SizedBox(width: double.infinity, height: 10),
               //
               Label(label: 'Family Name:', width: 100),
-              Decorated(child: TextField(name: 'Family Name')),
+              Decorated(
+                  child: TextField(name: 'Family Name', value: 'PHAM-VAN')),
               //
               SizedBox(width: double.infinity, height: 10),
               //
@@ -118,7 +120,14 @@ void main() {
               Checkbox(
                 name: 'Checkbox',
                 value: true,
-                defaultValue: true,
+              ),
+              //
+              SizedBox(width: 20, height: 10),
+              //
+              Label(label: 'unchecked:', width: 100),
+              Checkbox(
+                name: 'Unchecked',
+                value: false,
               ),
               //
               SizedBox(width: double.infinity, height: 10),

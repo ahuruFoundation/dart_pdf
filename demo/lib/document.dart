@@ -28,7 +28,7 @@ Future<Uint8List> generateDocument(PdfPageFormat format) async {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       header: (pw.Context context) {
         if (context.pageNumber == 1) {
-          return null;
+          return pw.SizedBox();
         }
         return pw.Container(
             alignment: pw.Alignment.centerRight,

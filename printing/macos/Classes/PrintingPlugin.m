@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
-import 'package:pdf/pdf.dart';
+#import <printing/printing-Swift.h>
 
-/// Zip compression function
-DeflateCallback defaultDeflate;
+// Dart:ffi API
+
+void net_nfet_printing_set_document(uint32_t job,
+                                    const uint8_t* doc,
+                                    uint64_t size) {
+  [PrintingPlugin setDocumentWithJob:job doc:doc size:size];
+}
+
+void net_nfet_printing_set_error(uint32_t job, const char* message) {
+  [PrintingPlugin setErrorWithJob:job message:message];
+}

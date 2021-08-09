@@ -22,12 +22,12 @@ import 'package:test/test.dart';
 
 import 'utils.dart';
 
-Document pdf;
-Font openSans;
-Font openSansBold;
-Font roboto;
-Font notoSans;
-Font genyomintw;
+late Document pdf;
+Font? openSans;
+Font? openSansBold;
+Font? roboto;
+Font? notoSans;
+Font? genyomintw;
 
 void main() {
   setUpAll(() {
@@ -58,7 +58,7 @@ void main() {
       build: (Context context) => ListView(
         children: <Widget>[
           Text(
-            style.font.fontName,
+            style.font!.fontName!,
             style: style,
           ),
         ],

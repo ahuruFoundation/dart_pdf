@@ -71,8 +71,7 @@ class PdfBool extends PdfDataType {
 
 class PdfNum extends PdfDataType {
   const PdfNum(this.value)
-      : assert(value != null),
-        assert(value != double.infinity),
+      : assert(value != double.infinity),
         assert(value != double.nan),
         assert(value != double.negativeInfinity);
 
@@ -114,9 +113,9 @@ class PdfNum extends PdfDataType {
 }
 
 class PdfNumList extends PdfDataType {
-  PdfNumList(this.values) : assert(values != null);
+  PdfNumList(this.values);
 
-  final List<num> values;
+  final List<num?> values;
 
   @override
   void output(PdfStream s) {
@@ -124,7 +123,7 @@ class PdfNumList extends PdfDataType {
       if (n > 0) {
         s.putByte(0x20);
       }
-      PdfNum(values[n]).output(s);
+      PdfNum(values[n]!).output(s);
     }
   }
 
@@ -274,7 +273,7 @@ class PdfString extends PdfDataType {
     switch (format) {
       case PdfStringFormat.binary:
         s.putByte(0x3c);
-        for (int byte in value) {
+        for (var byte in value) {
           s.putByte(_codeUnitForDigit((byte & 0xF0) >> 4));
           s.putByte(_codeUnitForDigit(byte & 0x0F));
         }
@@ -351,13 +350,13 @@ class PdfSecString extends PdfString {
       return super.output(s);
     }
 
-    final enc = object.pdfDocument.encryption.encrypt(value, object);
+    final enc = object.pdfDocument.encryption!.encrypt(value, object);
     _output(s, enc);
   }
 }
 
 class PdfName extends PdfDataType {
-  const PdfName(this.value) : assert(value != null);
+  const PdfName(this.value);
 
   final String value;
 
@@ -443,19 +442,19 @@ class PdfIndirect extends PdfDataType {
 }
 
 class PdfArray extends PdfDataType {
-  PdfArray([Iterable<PdfDataType> values]) {
+  PdfArray([Iterable<PdfDataType>? values]) {
     if (values != null) {
       this.values.addAll(values);
     }
   }
 
-  factory PdfArray.fromObjects(List<PdfObject> objects) {
+  factory PdfArray.fromObjects(List<PdfObject?> objects) {
     return PdfArray(
-        objects.map<PdfIndirect>((PdfObject e) => e.ref()).toList());
+        objects.map<PdfIndirect>((PdfObject? e) => e!.ref()).toList());
   }
 
-  factory PdfArray.fromNum(List<num> list) {
-    return PdfArray(list.map<PdfNum>((num e) => PdfNum(e)).toList());
+  factory PdfArray.fromNum(List<num?> list) {
+    return PdfArray(list.map<PdfNum>((num? e) => PdfNum(e!)).toList());
   }
 
   final List<PdfDataType> values = <PdfDataType>[];
@@ -512,7 +511,7 @@ class PdfArray extends PdfDataType {
 }
 
 class PdfDict extends PdfDataType {
-  PdfDict([Map<String, PdfDataType> values]) {
+  PdfDict([Map<String, PdfDataType>? values]) {
     if (values != null) {
       this.values.addAll(values);
     }
@@ -535,7 +534,7 @@ class PdfDict extends PdfDataType {
     values[k] = v;
   }
 
-  PdfDataType operator [](String k) {
+  PdfDataType? operator [](String k) {
     return values[k];
   }
 
@@ -558,7 +557,7 @@ class PdfDict extends PdfDataType {
 
   void merge(PdfDict other) {
     for (final key in other.values.keys) {
-      final value = other[key];
+      final value = other[key]!;
       final current = values[key];
       if (current == null) {
         values[key] = value;
@@ -598,7 +597,8 @@ class PdfColorType extends PdfDataType {
   @override
   void output(PdfStream s) {
     if (color is PdfColorCmyk) {
-      final PdfColorCmyk k = color;
+      // ignore: avoid_as
+      final k = color as PdfColorCmyk;
       PdfArray.fromNum(<double>[
         k.cyan,
         k.magenta,

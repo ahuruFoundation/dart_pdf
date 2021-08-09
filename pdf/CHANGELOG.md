@@ -1,13 +1,36 @@
 # Changelog
 
-## 2.1.0
+## 3.1.0
+
+- Fix some linting issues
+- Add PdfPage.rotate attribute
+- Add RadialGrid for charts with polar coordinates
+- Add PieChart
+- Fix Text layout with softwrap
+- Fix letterSpacing issue
+
+## 3.0.1
+
+- Improve internal null-safety
+
+## 3.0.0
+
+- Fix Checkbox Widget
+- Fix SVG colors with percent
+- Fix TextField Widget
+- Fix border painting with TableRow
+
+## 3.0.0-nullsafety.1
+
+- Fix Table border
+- Convert BorderStyle to a class
+- Implement dashed Divider
+
+## 3.0.0-nullsafety.0
 
 - Fix SVG fit alignment
 - Add DecorationSvgImage
-- Fix Table border
-- Implement dashed Divider
-- Update dependencies
-- Convert BorderStyle to a class
+- Opt-In null-safety
 
 ## 2.0.0
 

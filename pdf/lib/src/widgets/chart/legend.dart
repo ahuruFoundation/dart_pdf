@@ -35,15 +35,15 @@ class ChartLegend extends StatelessWidget {
     this.direction = Axis.vertical,
     this.decoration,
     this.padding = const EdgeInsets.all(5),
-  }) : assert(position != null);
+  });
 
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   final Alignment position;
 
   final Axis direction;
 
-  final BoxDecoration decoration;
+  final BoxDecoration? decoration;
 
   final EdgeInsets padding;
 
@@ -60,24 +60,24 @@ class ChartLegend extends StatelessWidget {
           child: dataset.legendShape(),
         ),
         Text(
-          dataset.legend,
+          dataset.legend!,
           style: textStyle,
-        )
+        ),
       ],
     );
   }
 
   @override
   Widget build(Context context) {
-    assert(Chart.of(context) != null,
-        '$runtimeType cannot be used without a Chart widget');
-
     final datasets = Chart.of(context).datasets;
 
     final Widget wrap = Wrap(
       direction: direction,
       spacing: 10,
       runSpacing: 10,
+      crossAxisAlignment: direction == Axis.horizontal
+          ? WrapCrossAlignment.center
+          : WrapCrossAlignment.start,
       children: <Widget>[
         for (final Dataset dataset in datasets)
           if (dataset.legend != null) _buildLegend(context, dataset)

@@ -20,7 +20,7 @@ import 'package:test/test.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 
-Document pdf;
+late Document pdf;
 
 Widget content(Context context) {
   return ListView(children: contentMultiPage(context));

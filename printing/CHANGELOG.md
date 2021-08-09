@@ -1,10 +1,41 @@
 # Changelog
 
-## 4.1.0
+## 5.0.4
+
+- Improve console error reporting
+
+## 5.0.3
+
+- Fix RichText annotations
+- Fix rotated pages display on iOS and macOS
+
+## 5.0.2
+
+- Fix iOS/macOS release build not working
+- Fix some linting issues
+- Fix Web print
+
+## 5.0.1
+
+- Update dependencies
+
+## 5.0.0
+
+- Add imageFromAssetBundle and networkImage
+- Add Page orientation on PdfPreview
+- Improve PrintJob object
+- Implement dynamic layout on iOS and macOS
+- Review directPrint internals
+
+## 5.0.0-nullsafety.1
+
+- Fix PdfPreview default locale
+
+## 5.0.0-nullsafety.0
 
 - Remove useless files
-- Add WidgetWraper ImageProvider and deprecate wrapWidget()
-- Update dependencies
+- Add WidgetWraper as an ImageProvider insead of wrapWidget()
+- Opt-In null-safety
 
 ## 4.0.0
 

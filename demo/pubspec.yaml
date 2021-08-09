@@ -1,23 +1,26 @@
 name: printing_demo
 description: Pdf Printing Demo
-
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.12.0-0 <3.0.0"
+  flutter: ">=1.16.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  http:
   intl:
   open_file:
+    git:
+      url: https://github.com/orevial/open_file
+      ref: null-safety-migration
   path_provider:
   printing:
   url_launcher:
 
 dev_dependencies:
-  flutter_driver:
-    sdk: flutter
   flutter_test:
     sdk: flutter
   test:

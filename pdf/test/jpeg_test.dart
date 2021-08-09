@@ -16,14 +16,15 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:pdf/widgets.dart';
 import 'package:test/test.dart';
 
 import 'utils.dart';
 
-Document pdf;
-MemoryImage image;
+late Document pdf;
+late MemoryImage image;
 
 void main() {
   setUpAll(() async {
@@ -84,7 +85,7 @@ void main() {
       (String image) => SizedBox(
         child: Image(
           MemoryImage(
-            gzip.decode(base64.decode(image)),
+            Uint8List.fromList(gzip.decode(base64.decode(image))),
           ),
         ),
         width: 200,

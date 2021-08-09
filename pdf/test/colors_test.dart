@@ -25,7 +25,7 @@ class Color extends StatelessWidget {
   Color(this.color, this.name, [this.varient]);
   final PdfColor color;
   final String name;
-  final String varient;
+  final String? varient;
 
   @override
   Widget build(Context context) {
@@ -73,9 +73,9 @@ class ColorWheel extends Widget {
   final ColorSpace colorSpace;
 
   @override
-  void layout(Context context, BoxConstraints constraints,
+  void layout(Context context, BoxConstraints? constraints,
       {bool parentUsesSize = false}) {
-    box = PdfRect.fromPoints(PdfPoint.zero, constraints.biggest);
+    box = PdfRect.fromPoints(PdfPoint.zero, constraints!.biggest);
   }
 
   void drawFilledArc(Context context, double centerX, double centerY,
@@ -83,20 +83,20 @@ class ColorWheel extends Widget {
     assert(radius1 > radius2);
 
     final startTop = PdfPoint(
-      box.x + centerX + math.cos(angleStart) * radius1,
-      box.y + centerY + math.sin(angleStart) * radius1,
+      box!.x + centerX + math.cos(angleStart) * radius1,
+      box!.y + centerY + math.sin(angleStart) * radius1,
     );
     final endTop = PdfPoint(
-      box.x + centerX + math.cos(angleEnd) * radius1,
-      box.y + centerY + math.sin(angleEnd) * radius1,
+      box!.x + centerX + math.cos(angleEnd) * radius1,
+      box!.y + centerY + math.sin(angleEnd) * radius1,
     );
     final startBottom = PdfPoint(
-      box.x + centerX + math.cos(angleStart) * radius2,
-      box.y + centerY + math.sin(angleStart) * radius2,
+      box!.x + centerX + math.cos(angleStart) * radius2,
+      box!.y + centerY + math.sin(angleStart) * radius2,
     );
     final endBottom = PdfPoint(
-      box.x + centerX + math.cos(angleEnd) * radius2,
-      box.y + centerY + math.sin(angleEnd) * radius2,
+      box!.x + centerX + math.cos(angleEnd) * radius2,
+      box!.y + centerY + math.sin(angleEnd) * radius2,
     );
 
     context.canvas
@@ -123,8 +123,8 @@ class ColorWheel extends Widget {
   void paint(Context context) {
     super.paint(context);
 
-    final centerX = box.width / 2;
-    final centerY = box.height / 2;
+    final centerX = box!.width / 2;
+    final centerY = box!.height / 2;
     final step = math.pi * 2 / divisions;
     final angleStart = math.pi / 2 - step;
 
@@ -167,7 +167,7 @@ class ColorWheel extends Widget {
   }
 }
 
-Document pdf;
+late Document pdf;
 
 void main() {
   setUpAll(() {

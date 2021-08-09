@@ -78,7 +78,7 @@ mixin PdfGraphicStream on PdfObject {
   }
 
   /// Get the default font of this graphic object
-  PdfFont getDefaultFont() {
+  PdfFont? getDefaultFont() {
     if (pdfDocument.fonts.isEmpty) {
       PdfFont.helvetica(pdfDocument);
     }
@@ -155,6 +155,6 @@ class PdfGraphicXObject extends PdfXObject with PdfGraphicStream {
   /// Creates a Graphic XObject
   PdfGraphicXObject(
     PdfDocument pdfDocument, [
-    String subtype,
+    String? subtype,
   ]) : super(pdfDocument, subtype);
 }
